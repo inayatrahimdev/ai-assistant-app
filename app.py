@@ -22,7 +22,13 @@ client = AzureOpenAI(
 # === Session State for Chat History ===
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"role": "system", "content": "You are a highly intelligent assistant. Answer with deep, long, structured insights, suitable for research and forecasting."}
+        {
+            "role": "system",
+            "content": (
+                "You are a highly intelligent assistant. "
+                "Answer with deep, long, structured insights, suitable for research and forecasting."
+            )
+        }
     ]
 
 # === User Input ===
@@ -33,13 +39,12 @@ if st.button("🚀 Get Answer") and user_input:
 
     with st.spinner("Thinking... Generating long response..."):
         try:
-            response = openai.ChatCompletion.create(
-    deployment_id=DEPLOYMENT_NAME,
-    messages=messages,
-    temperature=0.7,
-    max_completion_tokens=1000,  # ✅ CORRECT for o4-mini
-    ...
-)
+            response = client.chat.completions.create(
+                deployment_id=AZURE_DEPLOYMENT_NAME,
+                messages=st.session_state.messages,
+                temperature=0.7,
+                max_completion_tokens=1000,  # ✅ CORRECT PARAMETER for o4-mini
+            )
 
             reply = response.choices[0].message.content
             st.session_state.messages.append({"role": "assistant", "content": reply})
