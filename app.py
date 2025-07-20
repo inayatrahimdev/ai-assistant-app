@@ -1,55 +1,46 @@
 import streamlit as st
 from openai import AzureOpenAI
 
-# === Page Setup ===
-st.set_page_config(page_title="AI Assistant", layout="wide")
-st.title("🔮 Azure OpenAI - Long Context Chat Assistant")
-
-# === Azure Configuration ===
-AZURE_OPENAI_KEY = "your-key-here"
-AZURE_OPENAI_ENDPOINT = "https://your-resource-name.openai.azure.com/"
-AZURE_DEPLOYMENT_NAME = "o4-mini"  # Make sure this matches your Azure deployment
+# --- Azure OpenAI Config ---
+AZURE_OPENAI_KEY = st.secrets["AZURE_OPENAI_KEY"]
+AZURE_OPENAI_ENDPOINT = st.secrets["AZURE_OPENAI_ENDPOINT"]
+AZURE_DEPLOYMENT_NAME = st.secrets["AZURE_DEPLOYMENT_NAME"]
 API_VERSION = "2025-01-01-preview"
 
-# === AzureOpenAI Client ===
+# --- Azure Client Init ---
 client = AzureOpenAI(
     api_key=AZURE_OPENAI_KEY,
     api_version=API_VERSION,
     azure_endpoint=AZURE_OPENAI_ENDPOINT,
 )
 
-# === Session State for Chat History ===
-if "messages" not in st.session_state:
-    st.session_state.messages = [
-        {
-            "role": "system",
-            "content": (
-                "You are a highly intelligent assistant. "
-                "Answer with deep, long, structured insights, suitable for research and forecasting."
-            )
-        }
-    ]
+# --- Streamlit Page Setup ---
+st.set_page_config(page_title="🔮 Azure OpenAI Chat Assistant", page_icon="🔮")
+st.title("🔮 Azure OpenAI - Long Context Chat Assistant")
+st.markdown("🗣 **Ask anything — long or short questions welcome!**")
 
-# === User Input ===
-user_input = st.text_area("🗣 Ask anything (long questions welcome):", height=150)
+# --- User Input ---
+user_input = st.text_area("💬 Enter your message below:", height=150, placeholder="What is AI?")
 
-if st.button("🚀 Get Answer") and user_input:
-    st.session_state.messages.append({"role": "user", "content": user_input})
+# --- Handle Submit ---
+if st.button("Ask AI"):
+    if not user_input.strip():
+        st.warning("⚠️ Please enter a message before submitting.")
+    else:
+        with st.spinner("🤖 Thinking..."):
+            try:
+                response = client.chat.completions.create(
+                    model=AZURE_DEPLOYMENT_NAME,
+                    messages=[
+                        {"role": "system", "content": "You are a helpful, intelligent AI assistant."},
+                        {"role": "user", "content": user_input}
+                    ],
+                    temperature=1,  # ✅ FIXED: Only temperature=1 is supported in your Azure model
+                    max_completion_tokens=1024,
+                )
+                assistant_reply = response.choices[0].message.content.strip()
+                st.success("✅ Assistant's Response:")
+                st.markdown(assistant_reply)
 
-    with st.spinner("Thinking... Generating long response..."):
-        try:
-            # Generate completion
-            response = client.chat.completions.create(
-                model=AZURE_DEPLOYMENT_NAME,
-                messages=st.session_state.messages,
-                max_completion_tokens=1024,  # ✅ Azure specific
-                # temperature=1.0  # Optional — only include if supported by your deployment
-            )
-
-            reply = response.choices[0].message.content
-            st.session_state.messages.append({"role": "assistant", "content": reply})
-            st.markdown("### 🤖 Assistant's Response:")
-            st.write(reply)
-
-        except Exception as e:
-            st.error(f"❌ Error: {e}")
+            except Exception as e:
+                st.error(f"❌ Error: {str(e)}")
