@@ -33,15 +33,14 @@ if st.button("🚀 Get Answer") and user_input:
 
     with st.spinner("Thinking... Generating long response..."):
         try:
-            response = client.chat.completions.create(
-                model=AZURE_DEPLOYMENT_NAME,
-                messages=st.session_state.messages,
-                temperature=0.9,
-                max_tokens=4096,
-                top_p=0.95,
-                frequency_penalty=0.2,
-                presence_penalty=0.2,
-            )
+            response = openai.ChatCompletion.create(
+    deployment_id=DEPLOYMENT_NAME,
+    messages=messages,
+    temperature=0.7,
+    max_completion_tokens=1000,  # ✅ CORRECT for o4-mini
+    ...
+)
+
             reply = response.choices[0].message.content
             st.session_state.messages.append({"role": "assistant", "content": reply})
             st.markdown("### 🤖 Assistant's Response:")
