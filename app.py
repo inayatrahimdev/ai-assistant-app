@@ -40,10 +40,10 @@ if st.button("🚀 Get Answer") and user_input:
     with st.spinner("Thinking... Generating long response..."):
         try:
             response = client.chat.completions.create(
-                deployment_name=AZURE_DEPLOYMENT_NAME,
+                model=AZURE_DEPLOYMENT_NAME,
                 messages=st.session_state.messages,
                 temperature=0.7,
-                max_completion_tokens=1000,  # ✅ Correct parameter
+                max_completion_tokens=1000,
             )
 
             reply = response.choices[0].message.content
